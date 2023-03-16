@@ -94,6 +94,15 @@ MS5637_reset_status MS5637_Initialise(MS5637 *dev, void *i2c);
 
 /**
  * DATA READING
+ * Data reading depends on the Over Sampling Rate
+ * Usage:
+ *      Resolution 0 --> OSR=256 
+ *      Resolution 1 --> OSR=512 
+ *      Resolution 2 --> OSR=1024 
+ *      Resolution 3 --> OSR=2048
+ *      Resolution 4 --> OSR=4096
+ *      Resolution 4 --> OSR=8192
+ *      
  */
 void MS5637_ReadTemperature_and_Pressure(MS5637 *dev, uint8_t resolution);
 
