@@ -37,9 +37,128 @@ MS5637_reset_status MS5637_Initialise(MS5637 *dev, void *i2c){
 uint32_t read_eeprom_coefficients(MS5637 *dev, uint8_t prom_command){
     uint8_t data[2] = {0,0};
     uint8_t num_bytes_read = MS5637_ReadRegisters(dev->i2c, MS5637_ADDRESS, prom_command, data, 2);
-    printf("%d\n", num_bytes_read);
+    // printf("%d\n", num_bytes_read);
     return (data[0] << 8) | data[1];
 }
+
+void read_eeprom(MS5637 *dev){
+    int coefficients_index = 0;
+
+    uint8_t prom_addr_list[] = {MS5637_PROM_ADDR_0,
+		    MS5637_PROM_ADDR_1,
+		    MS5637_PROM_ADDR_2,
+		    MS5637_PROM_ADDR_3,
+		    MS5637_PROM_ADDR_4,
+		    MS5637_PROM_ADDR_5,
+		    MS5637_PROM_ADDR_6,};
+
+    for(int i = 0; i < 7;i++)
+    {
+        coefficients[coefficients_index] = read_eeprom_coefficients(dev, prom_addr_list[i]);
+        coefficients_index = coefficients_index + 1;
+    }
+}
+
+uint32_t conversion_read_adc(MS5637 *dev, uint8_t command, float waiting_time, uint8_t adc_address){
+    uint8_t adc_data[3];
+    uint8_t wrote = MS5637_WriteCommand(dev->i2c, MS5637_ADDRESS, command);
+    sleep_ms(waiting_time);
+
+    uint8_t num_bytes_read = MS5637_ReadRegisters(dev->i2c, MS5637_ADDRESS, adc_address, adc_data, 3);
+    // //printf("num bytes read: %d\n", num_bytes_read);
+    // printf("Data 1: %X\n", adc_data[0]);
+    // printf("Data 2: %X\n", adc_data[1]);
+    // printf("Data 3: %X\n", adc_data[2]);
+    //printf("%d\n",(adc_data[0] << 16) | adc_data[1] << 8 | adc_data[2]);
+    uint32_t adc_return = adc_data[0] << 16 | adc_data[1] << 8 | adc_data[2];
+    return adc_return;
+
+}
+
+void MS5637_ReadTemperature_and_Pressure(MS5637 *dev, uint8_t resolution){
+    int64_t OFF, SENS, P, T2, OFF2, SENS2;
+    int32_t dT, TEMP;
+
+    uint8_t temperature_command;
+    uint8_t temperature_waiting_time;
+
+    uint8_t pressure_command;
+    uint8_t pressure_waiting_time;
+
+    temperature_command = resolution * 2;
+    temperature_command |= MS5637_START_TEMPERATURE_ADC_CONVERSION;
+    uint8_t time[] ={MS5637_CONVERSION_TIME_OSR_256,
+		MS5637_CONVERSION_TIME_OSR_512,
+		MS5637_CONVERSION_TIME_OSR_1024,
+		MS5637_CONVERSION_TIME_OSR_2048,
+		MS5637_CONVERSION_TIME_OSR_4096,
+		MS5637_CONVERSION_TIME_OSR_8192}; 
+
+    int index_time_temperature = (temperature_command & MS5637_CONVERSION_OSR_MASK)/2;
+    temperature_waiting_time = time[index_time_temperature];
+
+    pressure_command = resolution * 2;
+    pressure_command |= MS5637_START_PRESSURE_ADC_CONVERSION;
+
+    int index_time_pressure = (pressure_command & MS5637_CONVERSION_OSR_MASK)/2;
+    pressure_waiting_time = time[index_time_pressure];
+
+    // printf("Waitng time: %d\n", pressure_waiting_time);
+    // printf("Command: %d\n", pressure_command);
+
+    read_eeprom(dev);
+
+    uint32_t adc_temperature = conversion_read_adc(dev, temperature_command, temperature_waiting_time, ADC_READ);
+    uint32_t adc_pressure = conversion_read_adc(dev, pressure_command, pressure_waiting_time, ADC_READ);
+
+    dT = (int32_t)adc_temperature - ((int32_t)coefficients[MS5637_REFERENCE_TEMPERATURE_INDEX] <<8 );
+
+    TEMP = 2000 + ((int64_t)dT * (int64_t)coefficients[MS5637_TEMP_COEFF_OF_TEMPERATURE_INDEX] >> 23) ;
+
+	
+	// Second order temperature compensation
+	if( TEMP < 2000 )
+	{
+		T2 = ( 3 * ( (int64_t)dT  * (int64_t)dT  ) ) >> 33;
+		OFF2 = 61 * ((int64_t)TEMP - 2000) * ((int64_t)TEMP - 2000) / 16 ;
+		SENS2 = 29 * ((int64_t)TEMP - 2000) * ((int64_t)TEMP - 2000) / 16 ;
+		
+		if( TEMP < -1500 )
+		{
+			OFF2 += 17 * ((int64_t)TEMP + 1500) * ((int64_t)TEMP + 1500) ;
+			SENS2 += 9 * ((int64_t)TEMP + 1500) * ((int64_t)TEMP + 1500) ;
+		}
+	}
+	else
+	{
+		T2 = ( 5 * ( (int64_t)dT  * (int64_t)dT  ) ) >> 38;
+		OFF2 = 0 ;
+		SENS2 = 0 ;
+	}
+	
+	// OFF = OFF_T1 + TCO * dT
+	OFF = ( (int64_t)(coefficients[MS5637_PRESSURE_OFFSET_INDEX]) << 17 ) + ( ( (int64_t)(coefficients[MS5637_TEMP_COEFF_OF_PRESSURE_OFFSET_INDEX]) * dT ) >> 6 ) ;
+	OFF -= OFF2 ;
+	
+	// Sensitivity at actual temperature = SENS_T1 + TCS * dT
+	SENS = ( (int64_t)coefficients[MS5637_PRESSURE_SENSITIVITY_INDEX] << 16 ) + ( ((int64_t)coefficients[MS5637_TEMP_COEFF_OF_PRESSURE_SENSITIVITY_INDEX] * dT) >> 7 ) ;
+	SENS -= SENS2 ;
+	
+	// Temperature compensated pressure = D1 * SENS - OFF
+	P = ( ( (adc_pressure * SENS) >> 21 ) - OFF ) >> 15 ;
+	
+	float temperature = ( (float)TEMP - T2 ) / 100;
+	float pressure = (float)P / 100;
+
+    //printf("%f,0,\n", pressure);
+    printf("%f,0,\n", pressure);
+
+
+
+
+}
+
+
 
 
 int main(){
@@ -62,8 +181,14 @@ int main(){
     int status = MS5637_Initialise(&sensor1, i2c0);
 
     while(status){
-        uint32_t prom_data = read_eeprom_coefficients(&sensor1, MS5637_PROM_ADDR_1);
-        printf("EEPROM1: %d\n", prom_data);
+        // uint32_t prom_data = read_eeprom_coefficients(&sensor1, MS5637_PROM_ADDR_1);
+        // printf("EEPROM1: %d\n", prom_data);
+
+        // read_eeprom(&sensor1);
+        // printf("%d\n", coefficients[1]);
+
+        MS5637_ReadTemperature_and_Pressure(&sensor1, 5);
+
     }
 
     return 0;
