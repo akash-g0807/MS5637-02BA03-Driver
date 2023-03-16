@@ -24,7 +24,7 @@ int main(){
     while(status){
 
         MS5637_ReadTemperature_and_Pressure(&sensor1, 5);
-        printf("%f,0,\n", sensor1.pressure);
+        printf("%f,0,\n", sensor1.temperature);
 
     }
 

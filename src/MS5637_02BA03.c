@@ -31,7 +31,7 @@ MS5637_reset_status MS5637_Initialise(MS5637 *dev, void *i2c){
     dev->write_MS5637_Command = MS5637_WriteCommand;
 
     uint8_t reset_command = 0x1E;
-    uint8_t wrote = MS5637_WriteCommand(dev->i2c,MS5637_ADDRESS, RESET);
+    uint8_t wrote = dev->write_MS5637_Command(dev->i2c,MS5637_ADDRESS, RESET);
     
     if(wrote == 1){
         return MS5637_INIT_SUCCESS;;
@@ -42,7 +42,7 @@ MS5637_reset_status MS5637_Initialise(MS5637 *dev, void *i2c){
 
 uint32_t read_eeprom_coefficients(MS5637 *dev, uint8_t prom_command){
     uint8_t data[2] = {0,0};
-    uint8_t num_bytes_read = MS5637_ReadRegisters(dev->i2c, MS5637_ADDRESS, prom_command, data, 2);
+    uint8_t num_bytes_read = dev->read_MS5637_Data(dev->i2c, MS5637_ADDRESS, prom_command, data, 2);
     return (data[0] << 8) | data[1];
 }
 
@@ -66,10 +66,10 @@ void read_eeprom(MS5637 *dev){
 
 uint32_t conversion_read_adc(MS5637 *dev, uint8_t command, float waiting_time, uint8_t adc_address){
     uint8_t adc_data[3];
-    uint8_t wrote = MS5637_WriteCommand(dev->i2c, MS5637_ADDRESS, command);
+    uint8_t wrote = dev->write_MS5637_Command(dev->i2c, MS5637_ADDRESS, command);
     sleep_ms(waiting_time);
 
-    uint8_t num_bytes_read = MS5637_ReadRegisters(dev->i2c, MS5637_ADDRESS, adc_address, adc_data, 3);
+    uint8_t num_bytes_read = dev->read_MS5637_Data(dev->i2c, MS5637_ADDRESS, adc_address, adc_data, 3);
     uint32_t adc_return = adc_data[0] << 16 | adc_data[1] << 8 | adc_data[2];
     return adc_return;
 
