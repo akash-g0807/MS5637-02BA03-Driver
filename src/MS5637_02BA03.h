@@ -68,7 +68,7 @@ typedef enum {
  * FUNCTION POINTERS
 */
 typedef uint8_t (*read_Data)(void*, const uint8_t, const uint8_t, uint8_t*, const uint8_t);
-typedef void (*write_Data)(void*, const uint8_t, const uint8_t, uint8_t*, const uint8_t);
+typedef uint8_t (*write_Command)(void*, const uint8_t, const uint8_t);
 
 /**
  * SENSOR STRUCT
@@ -85,7 +85,7 @@ typedef struct ms5637{
 
     read_Data read_MS5637_Data;
 
-    write_Data write_MS5637_Data;
+    write_Command write_MS5637_Command;
 
 } MS5637;
 
@@ -97,14 +97,14 @@ MS5637_reset_status MS5637_Initialise(MS5637 *dev, void *i2c);
 /**
  * DATA READING
  */
-int MS5637_ReadTemperature_and_Pressure(ADXL *dev);
+int MS5637_ReadTemperature_and_Pressure(MS5637 *dev);
 
 
 /**
  * LOW LEVEL FUNCTIONS
  */
 uint8_t MS5637_ReadRegisters(void* i2c, const uint8_t addr, const uint8_t reg, uint8_t *data_buff, const uint8_t num_bytes);
-void MS5637_WriteRegister(void* i2c, const uint8_t addr, const uint8_t reg, uint8_t *data_buff, const uint8_t num_bytes);
+uint8_t MS5637_WriteCommand(void* i2c, const uint8_t addr, const uint8_t command);
 
 #endif
 
