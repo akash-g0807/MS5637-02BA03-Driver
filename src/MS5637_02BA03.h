@@ -54,9 +54,8 @@
 #define MS5637_REFERENCE_TEMPERATURE_INDEX 5
 #define MS5637_TEMP_COEFF_OF_TEMPERATURE_INDEX 6
 
-
 /**
- * ADXL STATUS ENUM
+ * MS5637 STATUS ENUM
 */
 typedef enum {
     MS5637_INIT_FAIL,
@@ -97,7 +96,6 @@ MS5637_reset_status MS5637_Initialise(MS5637 *dev, void *i2c);
  * DATA READING
  */
 void MS5637_ReadTemperature_and_Pressure(MS5637 *dev, uint8_t resolution);
-
 
 /**
  * LOW LEVEL FUNCTIONS

@@ -150,6 +150,3 @@ void MS5637_ReadTemperature_and_Pressure(MS5637 *dev, uint8_t resolution){
     dev->pressure = (float)P / 100;
     dev->temperature = ( (float)TEMP - T2 ) / 100;
 }
-
-
-
