@@ -37,7 +37,6 @@ MS5637_reset_status MS5637_Initialise(MS5637 *dev, void *i2c){
 uint32_t read_eeprom_coefficients(MS5637 *dev, uint8_t prom_command){
     uint8_t data[2] = {0,0};
     uint8_t num_bytes_read = MS5637_ReadRegisters(dev->i2c, MS5637_ADDRESS, prom_command, data, 2);
-    // printf("%d\n", num_bytes_read);
     return (data[0] << 8) | data[1];
 }
 
@@ -65,11 +64,6 @@ uint32_t conversion_read_adc(MS5637 *dev, uint8_t command, float waiting_time, u
     sleep_ms(waiting_time);
 
     uint8_t num_bytes_read = MS5637_ReadRegisters(dev->i2c, MS5637_ADDRESS, adc_address, adc_data, 3);
-    // //printf("num bytes read: %d\n", num_bytes_read);
-    // printf("Data 1: %X\n", adc_data[0]);
-    // printf("Data 2: %X\n", adc_data[1]);
-    // printf("Data 3: %X\n", adc_data[2]);
-    //printf("%d\n",(adc_data[0] << 16) | adc_data[1] << 8 | adc_data[2]);
     uint32_t adc_return = adc_data[0] << 16 | adc_data[1] << 8 | adc_data[2];
     return adc_return;
 
@@ -102,9 +96,6 @@ void MS5637_ReadTemperature_and_Pressure(MS5637 *dev, uint8_t resolution){
 
     int index_time_pressure = (pressure_command & MS5637_CONVERSION_OSR_MASK)/2;
     pressure_waiting_time = time[index_time_pressure];
-
-    // printf("Waitng time: %d\n", pressure_waiting_time);
-    // printf("Command: %d\n", pressure_command);
 
     read_eeprom(dev);
 
@@ -150,12 +141,8 @@ void MS5637_ReadTemperature_and_Pressure(MS5637 *dev, uint8_t resolution){
 	float temperature = ( (float)TEMP - T2 ) / 100;
 	float pressure = (float)P / 100;
 
-    //printf("%f,0,\n", pressure);
-    printf("%f,0,\n", pressure);
-
-
-
-
+    dev->pressure = (float)P / 100;
+    dev->temperature = ( (float)TEMP - T2 ) / 100;
 }
 
 
@@ -181,13 +168,9 @@ int main(){
     int status = MS5637_Initialise(&sensor1, i2c0);
 
     while(status){
-        // uint32_t prom_data = read_eeprom_coefficients(&sensor1, MS5637_PROM_ADDR_1);
-        // printf("EEPROM1: %d\n", prom_data);
-
-        // read_eeprom(&sensor1);
-        // printf("%d\n", coefficients[1]);
 
         MS5637_ReadTemperature_and_Pressure(&sensor1, 5);
+        printf("%f,0,\n", sensor1.pressure);
 
     }
 
