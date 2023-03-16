@@ -70,6 +70,10 @@ void read_eeprom(MS5637 *dev){
     }
 }
 
+/**
+ * READING RAW ADC DATA
+ * Based on the calculated OSR conversion time and the the command for the OSR
+ */
 uint32_t conversion_read_adc(MS5637 *dev, uint8_t command, float waiting_time, uint8_t adc_address){
     uint8_t adc_data[3];
     uint8_t wrote = dev->write_MS5637_Command(dev->i2c, MS5637_ADDRESS, command);
@@ -85,9 +89,11 @@ void MS5637_ReadTemperature_and_Pressure(MS5637 *dev, uint8_t resolution){
     int64_t OFF, SENS, P, T2, OFF2, SENS2;
     int32_t dT, TEMP;
 
+    /* Getting the temperature command and conversion time based on OSR */
     uint8_t temperature_command;
     uint8_t temperature_waiting_time;
-
+    
+    /* Getting the pressure command and conversion time based on OSR */
     uint8_t pressure_command;
     uint8_t pressure_waiting_time;
 
