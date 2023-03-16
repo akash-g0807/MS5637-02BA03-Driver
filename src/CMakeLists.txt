@@ -14,6 +14,7 @@ pico_sdk_init()
 add_executable(MS5637_02BA03
         MS5637_02BA03.c
         MS5637_02BA03.h
+        main.c
         )
 
 

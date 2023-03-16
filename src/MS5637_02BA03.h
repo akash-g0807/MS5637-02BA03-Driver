@@ -54,10 +54,6 @@
 #define MS5637_REFERENCE_TEMPERATURE_INDEX 5
 #define MS5637_TEMP_COEFF_OF_TEMPERATURE_INDEX 6
 
-/**
- * EEPROM Coefficients
-*/
-uint16_t coefficients[8] = {0,0,0,0,0,0,0,0};
 
 /**
  * ADXL STATUS ENUM

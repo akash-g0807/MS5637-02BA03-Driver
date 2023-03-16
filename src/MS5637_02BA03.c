@@ -1,6 +1,12 @@
 #include "MS5637_02BA03.h"
 #include <stdio.h>
 
+/**
+ * EEPROM Coefficients
+*/
+uint16_t coefficients[8] = {0,0,0,0,0,0,0,0};
+
+
 uint8_t MS5637_ReadRegisters(void* i2c, const uint8_t addr, const uint8_t reg, uint8_t *data_buff, const uint8_t num_bytes){
     i2c_write_blocking(i2c, addr, &reg, 1, true);  
     uint8_t num_bytes_read = i2c_read_blocking(i2c, addr, data_buff, num_bytes, false);
@@ -147,32 +153,3 @@ void MS5637_ReadTemperature_and_Pressure(MS5637 *dev, uint8_t resolution){
 
 
 
-
-int main(){
-    stdio_init_all();
-    
- 
-    const uint8_t sda_pin = 20;
-    const uint8_t scl_pin = 21; 
-
-    i2c_init(i2c0, 400 * 1000);
-
-    gpio_set_function(sda_pin, GPIO_FUNC_I2C);
-    gpio_set_function(scl_pin, GPIO_FUNC_I2C);
-     
-    gpio_pull_up(sda_pin);
-    gpio_pull_up(scl_pin);
-
-    MS5637 sensor1;
-
-    int status = MS5637_Initialise(&sensor1, i2c0);
-
-    while(status){
-
-        MS5637_ReadTemperature_and_Pressure(&sensor1, 5);
-        printf("%f,0,\n", sensor1.pressure);
-
-    }
-
-    return 0;
-}
