@@ -6,7 +6,9 @@
 */
 uint16_t coefficients[8] = {0,0,0,0,0,0,0,0};
 
-
+/**
+ * I2C Read and Write Commands
+*/
 uint8_t MS5637_ReadRegisters(void* i2c, const uint8_t addr, const uint8_t reg, uint8_t *data_buff, const uint8_t num_bytes){
     i2c_write_blocking(i2c, addr, &reg, 1, true);  
     uint8_t num_bytes_read = i2c_read_blocking(i2c, addr, data_buff, num_bytes, false);
@@ -30,9 +32,11 @@ MS5637_reset_status MS5637_Initialise(MS5637 *dev, void *i2c){
     dev-> read_MS5637_Data = MS5637_ReadRegisters;
     dev->write_MS5637_Command = MS5637_WriteCommand;
 
+    /* Reset Command */
     uint8_t reset_command = 0x1E;
     uint8_t wrote = dev->write_MS5637_Command(dev->i2c,MS5637_ADDRESS, RESET);
     
+    /* Checking if the write command has failed */
     if(wrote == 1){
         return MS5637_INIT_SUCCESS;;
     }
@@ -40,11 +44,13 @@ MS5637_reset_status MS5637_Initialise(MS5637 *dev, void *i2c){
 
 }
 
+/* Reading the coefficients from the EEPROM */
 uint32_t read_eeprom_coefficients(MS5637 *dev, uint8_t prom_command){
     uint8_t data[2] = {0,0};
     uint8_t num_bytes_read = dev->read_MS5637_Data(dev->i2c, MS5637_ADDRESS, prom_command, data, 2);
     return (data[0] << 8) | data[1];
 }
+
 
 void read_eeprom(MS5637 *dev){
     int coefficients_index = 0;
@@ -113,7 +119,7 @@ void MS5637_ReadTemperature_and_Pressure(MS5637 *dev, uint8_t resolution){
     TEMP = 2000 + ((int64_t)dT * (int64_t)coefficients[MS5637_TEMP_COEFF_OF_TEMPERATURE_INDEX] >> 23) ;
 
 	
-	// Second order temperature compensation
+	/* Second order temperature compensation */
 	if( TEMP < 2000 )
 	{
 		T2 = ( 3 * ( (int64_t)dT  * (int64_t)dT  ) ) >> 33;
@@ -133,20 +139,21 @@ void MS5637_ReadTemperature_and_Pressure(MS5637 *dev, uint8_t resolution){
 		SENS2 = 0 ;
 	}
 	
-	// OFF = OFF_T1 + TCO * dT
+	/* OFF = OFF_T1 + TCO * dT */
 	OFF = ( (int64_t)(coefficients[MS5637_PRESSURE_OFFSET_INDEX]) << 17 ) + ( ( (int64_t)(coefficients[MS5637_TEMP_COEFF_OF_PRESSURE_OFFSET_INDEX]) * dT ) >> 6 ) ;
 	OFF -= OFF2 ;
 	
-	// Sensitivity at actual temperature = SENS_T1 + TCS * dT
+	/* Sensitivity at actual temperature = SENS_T1 + TCS * dT */
 	SENS = ( (int64_t)coefficients[MS5637_PRESSURE_SENSITIVITY_INDEX] << 16 ) + ( ((int64_t)coefficients[MS5637_TEMP_COEFF_OF_PRESSURE_SENSITIVITY_INDEX] * dT) >> 7 ) ;
 	SENS -= SENS2 ;
 	
-	// Temperature compensated pressure = D1 * SENS - OFF
+	/* Temperature compensated pressure = D1 * SENS - OFF */
 	P = ( ( (adc_pressure * SENS) >> 21 ) - OFF ) >> 15 ;
 	
 	float temperature = ( (float)TEMP - T2 ) / 100;
 	float pressure = (float)P / 100;
 
+    /* Updating the temperature and pressure values in the sensor struct */
     dev->pressure = (float)P / 100;
     dev->temperature = ( (float)TEMP - T2 ) / 100;
 }
