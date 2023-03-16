@@ -44,7 +44,9 @@ MS5637_reset_status MS5637_Initialise(MS5637 *dev, void *i2c){
 
 }
 
-/* Reading the coefficients from the EEPROM */
+/**
+ *  Reading the coefficients from the EEPROM 
+ */
 uint32_t read_eeprom_coefficients(MS5637 *dev, uint8_t prom_command){
     uint8_t data[2] = {0,0};
     uint8_t num_bytes_read = dev->read_MS5637_Data(dev->i2c, MS5637_ADDRESS, prom_command, data, 2);
