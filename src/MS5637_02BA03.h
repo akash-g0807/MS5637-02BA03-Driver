@@ -8,8 +8,6 @@
 /**
  * Including relevant libraries
 */
-#include "pico/stdlib.h"
-#include "hardware/i2c.h"
 #include <stdint.h>
 #include <stdio.h>
 
