@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "ms5637_02ba03.h": "c"
+        "ms5637_02ba03.h": "c",
+        "stdio.h": "c"
     }
 }
