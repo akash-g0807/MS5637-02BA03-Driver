@@ -101,7 +101,7 @@ MS5637_reset_status MS5637_Initialise(MS5637 *dev, void *i2c);
  *      Resolution 2 --> OSR=1024 
  *      Resolution 3 --> OSR=2048
  *      Resolution 4 --> OSR=4096
- *      Resolution 4 --> OSR=8192
+ *      Resolution 5 --> OSR=8192
  *      
  */
 void MS5637_ReadTemperature_and_Pressure(MS5637 *dev, uint8_t resolution);

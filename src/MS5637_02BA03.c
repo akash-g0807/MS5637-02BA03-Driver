@@ -63,10 +63,9 @@ void read_eeprom(MS5637 *dev){
 		    MS5637_PROM_ADDR_3,
 		    MS5637_PROM_ADDR_4,
 		    MS5637_PROM_ADDR_5,
-		    MS5637_PROM_ADDR_6,};
+		    MS5637_PROM_ADDR_6};
 
-    for(int i = 0; i < 7;i++)
-    {
+    for(int i = 0; i < 7;i++){
         coefficients[coefficients_index] = read_eeprom_coefficients(dev, prom_addr_list[i]);
         coefficients_index = coefficients_index + 1;
     }
