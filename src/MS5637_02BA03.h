@@ -112,7 +112,7 @@ uint8_t MS5637_ReadRegisters(void* i2c, const uint8_t addr, const uint8_t reg, u
 uint8_t MS5637_WriteCommand(void* i2c, const uint8_t addr, const uint8_t command);
 
 /**
- * Delay around sleep function
+ * WRAPPER AROUND SLEEP FUNCTION
 */
 void delay(uint8_t time);
 
