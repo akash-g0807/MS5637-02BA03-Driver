@@ -111,6 +111,10 @@ void MS5637_ReadTemperature_and_Pressure(MS5637 *dev, uint8_t resolution);
 uint8_t MS5637_ReadRegisters(void* i2c, const uint8_t addr, const uint8_t reg, uint8_t *data_buff, const uint8_t num_bytes);
 uint8_t MS5637_WriteCommand(void* i2c, const uint8_t addr, const uint8_t command);
 
+/**
+ * Delay around sleep function
+*/
+void delay(uint8_t time);
 
 
 #endif
